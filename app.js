@@ -32,4 +32,4 @@ app.use(require('./errors/handlerError'));
 app.use(errorLogger);
 app.use((err, req, res, next) => error(err, req, res, next));
 
-module.exports = app;
+app.listen(PORT, () => console.log(`App listining on port: ${PORT}`));
