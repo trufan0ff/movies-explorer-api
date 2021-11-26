@@ -1,20 +1,11 @@
-const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 const NotFoundError = require("../errors/not-found-err");
-const ValidationError = require("../errors/validation-error");
 const LoginPasswordError = require("../errors/login-password-error");
 const ConflictErr = require("../errors/ConflictErr");
-
-const cathIdError = (res, user) => {
-  if (!user) {
-    throw new NotFoundError("Данные не найдены");
-  }
-  return res.status(200).send({ data: user });
-};
 
 module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user)
@@ -27,12 +18,6 @@ module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body; // получим из объекта запроса имя и описание пользователя
-  if (req.body.password.length < 3) {
-    throw new ValidationError("Слишком короткий пароль");
-  }
-  if (!validator.isEmail(req.body.email)) {
-    throw new ValidationError("Некорректный email");
-  }
   User.findOne({ email: req.body.email })
     .then((registeredUser) => {
       if (registeredUser) {
@@ -50,11 +35,18 @@ module.exports.createUser = (req, res, next) => {
 };
 
 module.exports.updateProfile = (req, res, next) => {
-  User.findByIdAndUpdate(req.user._id,
-    { name: req.body.name, about: req.body.about },
-    { new: true, runValidators: true })
-    .then((user) => cathIdError(res, user))
-    .catch(next);
+  const newData = {};
+  if (req.body.name) {
+    newData.name = req.body.name;
+  }
+
+  if (req.body.email) {
+    newData.email = req.body.email;
+  }
+  User.findByIdAndUpdate(req.user, newData, { runValidators: true, new: true })
+    .orFail(new NotFoundError("Пользователь не найден"))
+    .then((user) => res.send({ name: user.name, email: user.email, movies: user.movies }))
+    .catch((err) => next(err));
 };
 
 module.exports.usersLogin = (req, res, next) => {

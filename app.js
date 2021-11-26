@@ -2,10 +2,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
-const error = require("./middlewares/error");
+const { errors } = require("celebrate");
+const handleError = require("./middlewares/error");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
 
-const { PORT = 3000, DB = "mongodb://localhost:27017/bestfilmsdb" } = process.env;
+const { MD, PORT } = require("./config");
 
 const app = express();
 
@@ -15,23 +16,17 @@ app.use(cors({
   origin: "https://api.best-films.nomoredomains.work",
 }));
 
-mongoose.connect(DB, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useFindAndModify: false,
-  // eslint-disable-next-line indent
-    useUnifiedTopology: true,
-});
+mongoose.connect(MD);
 
 app.use(express.json());
 app.use(requestLogger);
 app.use(require("./utils/rateLimiter"));
-app.use(require("./routes/auth"));
 app.use(require("./middlewares/auth"));
 app.use(require("./routes/index"));
 app.use(require("./errors/handlerError"));
 
 app.use(errorLogger);
-app.use((err, req, res, next) => error(err, req, res, next));
+app.use(errors());
+app.use(handleError);
 
 app.listen(PORT, () => console.log(`App listining on port: ${PORT}`));
