@@ -21,8 +21,9 @@ mongoose.connect(MD);
 app.use(express.json());
 app.use(requestLogger);
 app.use(require("./utils/rateLimiter"));
-app.use(require("./middlewares/auth"));
 app.use(require("./routes/index"));
+app.use(require("./middlewares/auth"));
+
 app.use(require("./errors/handlerError"));
 
 app.use(errorLogger);
