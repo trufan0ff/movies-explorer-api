@@ -19,9 +19,6 @@
           "_id"
         ]
       }
-    ],
-    
-    "linebreak-style": 0,
-    "quotes": ["error", "double"]
+    ]
   }
 }

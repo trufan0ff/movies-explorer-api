@@ -1,14 +1,14 @@
-const { celebrate, Joi } = require("celebrate");
+const { celebrate, Joi } = require('celebrate');
 
-const router = require("express").Router();
-const users = require("../controllers/users");
+const router = require('express').Router();
+const users = require('../controllers/users');
 
-router.get("/me", users.getUserMe);
+router.get('/me', users.getUserMe);
 
-router.patch("/me", celebrate({
+router.patch('/me', celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
+    email: Joi.string().required().min(2).max(30),
   }),
 }), users.updateProfile);
 

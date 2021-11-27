@@ -1,9 +1,9 @@
-const router = require("express").Router();
-const { celebrate, Joi } = require("celebrate");
-const validator = require("validator");
+const router = require('express').Router();
+const { celebrate, Joi } = require('celebrate');
+const validator = require('validator');
 
-const { getSavedMovies, createMovie, deleteMovie } = require("../controllers/movies");
-const errorMessages = require("../errors/errorMessages");
+const { getSavedMovies, createMovie, deleteMovie } = require('../controllers/movies');
+const errorMessages = require('../errors/errorMessages');
 
 const movieScheme = {
   string: Joi.string().required().messages(errorMessages.string),
@@ -14,9 +14,9 @@ const movieScheme = {
   }).messages(errorMessages.url),
 };
 
-router.get("/", getSavedMovies);
+router.get('/', getSavedMovies);
 
-router.post("/", celebrate({
+router.post('/', celebrate({
   body: Joi.object().keys({
     country: movieScheme.string,
     director: movieScheme.string,
@@ -32,11 +32,11 @@ router.post("/", celebrate({
   }),
 }), createMovie);
 
-router.delete("/:id", celebrate({
+router.delete('/:id', celebrate({
   params: Joi.object({
     id: Joi.number().required().min(0).messages({
-      "string.hex": "Ошибка в полученном id",
-      "string.length": "Ошибка в полученном id",
+      'string.hex': 'Ошибка в полученном id',
+      'string.length': 'Ошибка в полученном id',
     }),
   }),
 }), deleteMovie);
