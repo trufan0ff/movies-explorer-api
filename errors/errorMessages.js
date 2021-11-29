@@ -27,5 +27,10 @@ module.exports = {
     'string.empty': 'Поле {#label} не содержит информацию',
     'sting.base': 'Поле {#label} должно иметь тип sting',
   },
+  name: {
+    'any.custom': 'Имя не прошло валидацию',
+    'any.required': 'Не указано имя',
+    'string.empty': 'Поле "Имя" не содержит информацию',
+  },
 
 };

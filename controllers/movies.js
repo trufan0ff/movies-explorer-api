@@ -2,6 +2,7 @@ const Movie = require('../models/movie');
 const User = require('../models/user');
 
 const NotFoundError = require('../errors/not-found-err');
+const Forbidden = require('../errors/forbidden');
 
 const { addOwnerToMovie } = require('../utils/index');
 
@@ -20,13 +21,14 @@ module.exports.createMovie = (req, res, next) => User.findByIdAndUpdate(
   .then(res.send({ message: `Фильм ${req.body.nameRU} добавлен в избранное` }))
   .catch((err) => next(err));
 
-module.exports.deleteMovie = (req, res, next) => User.findByIdAndUpdate(
-  req.user,
-  { $pull: { movies: req.params.id } },
-)
+module.exports.deleteMovie = (req, res, next) => User.findById(req.params.id)
+
   .orFail(new NotFoundError('Ошибка удаления из избранного. Пользователь не найден'))
   .then(Movie.deleteMany({ _id: req.params.id, owner: req.user })
     .then((result) => {
+      if (result.owner !== req.user) {
+        return next(new Forbidden('Ошибка удаления из избранного. Нельзя удалять чужой фильм'));
+      }
       if (result.deletedCount === 0) {
         return next(new NotFoundError('Ошибка удаления из избранного. Фильм не найден'));
       }

@@ -6,6 +6,7 @@ const { JWT_SECRET } = require('../config');
 const { NODE_ENV } = process.env;
 const NotFoundError = require('../errors/not-found-err');
 const LoginPasswordError = require('../errors/login-password-error');
+const ConflictErr = require('../errors/ConflictErr');
 
 module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user)
@@ -40,12 +41,11 @@ module.exports.updateProfile = (req, res, next) => {
   if (req.body.name) {
     newData.name = req.body.name;
   }
-
   if (req.body.email) {
     newData.email = req.body.email;
   }
   User.findByIdAndUpdate(req.user, newData, { runValidators: true, new: true })
-    .orFail(new NotFoundError('Пользователь не найден'))
+    .orFail(new ConflictErr('Такая почта существует'))
     .then((user) => res.send({ name: user.name, email: user.email, movies: user.movies }))
     .catch((err) => next(err));
 };

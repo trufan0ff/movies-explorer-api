@@ -25,7 +25,7 @@ routes.post('/signup', celebrate({
     password: Joi.string().required().min(6).messages(errorMessages.password),
     name: Joi.string().required().min(2).max(30)
       .messages({
-        'any.required': 'Не указана почта',
+        'any.required': 'Не указано имя',
         'string.empty': 'Поле "имя" не содержит информацию',
         'string.min': 'Имя должно содержать не менее {#limit} символов',
         'string.max': 'Имя должно содержать не более {#limit} символов',
@@ -40,4 +40,5 @@ routes.use('/movies', require('./movies'));
 routes.use('/*', () => {
   throw new NotFoundError('Запрашиваемый ресурс не найден');
 });
+
 module.exports = routes;
