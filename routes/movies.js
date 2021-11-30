@@ -34,10 +34,7 @@ router.post('/', celebrate({
 
 router.delete('/:id', celebrate({
   params: Joi.object({
-    id: Joi.number().required().min(0).messages({
-      'string.hex': 'Ошибка в полученном id',
-      'string.length': 'Ошибка в полученном id',
-    }),
+    id: Joi.string().hex().required().min(0),
   }),
 }), deleteMovie);
 

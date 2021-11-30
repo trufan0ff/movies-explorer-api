@@ -19,6 +19,9 @@ module.exports.createUser = (req, res, next) => {
   if (typeof req.body === 'undefined') {
     return next(new LoginPasswordError('Указан неверный логин или пароль'));
   }
+  if (req.body.email === req.user.email) {
+    return next(new ConflictErr('Такая почта существует'));
+  }
   const { name, email, password } = req.body;
 
   return bcrypt.hash(password, 10).then((hash) => {
@@ -38,6 +41,9 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.updateProfile = (req, res, next) => {
   const newData = {};
+  if (req.body.email === newData.email) {
+    next(new ConflictErr('Такая почта существует'));
+  }
   if (req.body.name) {
     newData.name = req.body.name;
   }
@@ -45,7 +51,6 @@ module.exports.updateProfile = (req, res, next) => {
     newData.email = req.body.email;
   }
   User.findByIdAndUpdate(req.user, newData, { runValidators: true, new: true })
-    .orFail(new ConflictErr('Такая почта существует'))
     .then((user) => res.send({ name: user.name, email: user.email, movies: user.movies }))
     .catch((err) => next(err));
 };

@@ -17,20 +17,19 @@ module.exports.createMovie = (req, res, next) => User.findByIdAndUpdate(
   { $addToSet: { movies: req.body.movieId } },
 )
   .orFail(new NotFoundError('Ошибка! Пользователь не найден'))
-  .then(Movie.create(addOwnerToMovie(req.body, req.user)))
+  .then(Movie.createMovie(addOwnerToMovie(req.body, req.user)))
   .then(res.send({ message: `Фильм ${req.body.nameRU} добавлен в избранное` }))
   .catch((err) => next(err));
 
 module.exports.deleteMovie = (req, res, next) => User.findById(req.params.id)
-
   .orFail(new NotFoundError('Ошибка удаления из избранного. Пользователь не найден'))
-  .then(Movie.deleteMany({ _id: req.params.id, owner: req.user })
+  .then(Movie.deleteMovie({ _id: req.params.id, owner: req.user })
     .then((result) => {
+      if (!result) {
+        return next(new NotFoundError('Ошибка удаления из избранного. Фильм не найден'));
+      }
       if (result.owner !== req.user) {
         return next(new Forbidden('Ошибка удаления из избранного. Нельзя удалять чужой фильм'));
-      }
-      if (result.deletedCount === 0) {
-        return next(new NotFoundError('Ошибка удаления из избранного. Фильм не найден'));
       }
       return res.send({ message: 'Фильм удалён из избранного' });
     }).catch((err) => next(err)));
