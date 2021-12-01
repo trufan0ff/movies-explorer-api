@@ -3,7 +3,7 @@ const User = require('../models/user');
 
 const NotFoundError = require('../errors/not-found-err');
 const Forbidden = require('../errors/forbidden');
-
+const CastError = require('../errors/cast-error');
 const { addOwnerToMovie } = require('../utils/index');
 
 module.exports.getSavedMovies = (req, res, next) => {
@@ -21,15 +21,28 @@ module.exports.createMovie = (req, res, next) => User.findByIdAndUpdate(
   .then(res.send({ message: `Фильм ${req.body.nameRU} добавлен в избранное` }))
   .catch((err) => next(err));
 
-module.exports.deleteMovie = (req, res, next) => User.findById(req.params.id)
-  .orFail(new NotFoundError('Ошибка удаления из избранного. Пользователь не найден'))
-  .then(Movie.deleteMovie({ _id: req.params.id, owner: req.user })
-    .then((result) => {
-      if (!result) {
-        return next(new NotFoundError('Ошибка удаления из избранного. Фильм не найден'));
+module.exports.deleteMovie = (req, res, next) => {
+  if (!req.params.movieId.match(/^[0-9a-fA-F]{24}$/)) {
+    throw new CastError('Передан некорректный id фильма');
+  }
+  Movie.findById(req.params.movieId)
+    .then((movie) => {
+      if (!movie) {
+        throw new NotFoundError('Фильм с указанным id не найден');
       }
-      if (result.owner !== req.user) {
-        return next(new Forbidden('Ошибка удаления из избранного. Нельзя удалять чужой фильм'));
+      if (toString(movie.owner) === toString(req.user._id)) {
+        Movie.findByIdAndRemove(movie._id)
+          .then((removeMovie) => {
+            if (removeMovie !== null) {
+              res.send(removeMovie);
+            } else {
+              throw new NotFoundError('Фильм с указанным id не найден');
+            }
+          })
+          .catch(next);
+      } else {
+        throw new Forbidden('Вы можете удалять только собственные фильмы');
       }
-      return res.send({ message: 'Фильм удалён из избранного' });
-    }).catch((err) => next(err)));
+    })
+    .catch(next);
+};

@@ -16,32 +16,55 @@ module.exports.getUserMe = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  if (typeof req.body === 'undefined') {
-    return next(new LoginPasswordError('Указан неверный логин или пароль'));
-  }
-  if (req.body.email === req.user.email) {
-    return next(new ConflictErr('Такая почта существует'));
-  }
+  // if (typeof req.body === 'undefined') {
+  //   return next(new LoginPasswordError('Указан неверный логин или пароль'));
+  // }
   const { name, email, password } = req.body;
 
-  return bcrypt.hash(password, 10).then((hash) => {
-    User.create({
-      name,
-      email,
-      password: hash,
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        bcrypt.hash(password, 10)
+          .then((hash) => User.create({
+            email,
+            password: hash,
+            name,
+          })
+            .then((newUser) => {
+              if (!newUser) {
+                throw new LoginPasswordError('Указан неверный логин или пароль');
+              }
+              res.send({
+                _id: newUser._id,
+                name,
+                email,
+              });
+            })
+            .catch(next));
+      } else {
+        throw new ConflictErr('Пользователь с таким email уже существует');
+      }
     })
-      .then((user) => res.send({
-        _id: user._id,
-        name,
-        email,
-      }))
-      .catch((err) => next(err));
-  });
+    .catch(next);
 };
+//   return bcrypt.hash(password, 10).then((hash) => {
+//     User.create({
+//       name,
+//       email,
+//       password: hash,
+//     })
+//       .then((user) => res.send({
+//         _id: user._id,
+//         name,
+//         email,
+//       }))
+//       .catch((err) => next(err));
+//   });
+// };
 
 module.exports.updateProfile = (req, res, next) => {
   const newData = {};
-  if (req.body.email === newData.email) {
+  if (req.body.email === req.user.email) {
     next(new ConflictErr('Такая почта существует'));
   }
   if (req.body.name) {
