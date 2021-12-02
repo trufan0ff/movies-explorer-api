@@ -1,5 +1,4 @@
 const Movie = require('../models/movie');
-const User = require('../models/user');
 
 const NotFoundError = require('../errors/not-found-err');
 const Forbidden = require('../errors/forbidden');
@@ -12,19 +11,48 @@ module.exports.getSavedMovies = (req, res, next) => {
     .catch((err) => next(err));
 };
 
-module.exports.createMovie = (req, res, next) => User.findByIdAndUpdate(
-  req.user,
-  { $addToSet: { movies: req.body.movieId } },
-)
-  .orFail(new NotFoundError('Ошибка! Пользователь не найден'))
-  .then(Movie.createMovie(addOwnerToMovie(req.body, req.user)))
-  .then(res.send({ message: `Фильм ${req.body.nameRU} добавлен в избранное` }))
-  .catch((err) => next(err));
+module.exports.createMovie = (req, res, next) => {
+  const {
+    movieId,
+    country,
+    director,
+    duration,
+    year,
+    description,
+    image,
+    trailer,
+    thumbnail,
+    nameRU,
+    nameEN,
+  } = req.body;
+  const owner = addOwnerToMovie(req.body, req.user);
+
+  Movie.createMovie({
+    movieId,
+    country,
+    director,
+    duration,
+    year,
+    description,
+    image,
+    trailer,
+    thumbnail,
+    owner,
+    nameRU,
+    nameEN,
+  })
+    .then((movie) => {
+      if (!movie) {
+        throw new CastError('Переданы некорректные данные');
+      }
+      const newMovie = movie.toObject();
+      delete newMovie.owner;
+      res.send(newMovie);
+    })
+    .catch(next);
+};
 
 module.exports.deleteMovie = (req, res, next) => {
-  if (!req.params.movieId.match(/^[0-9a-fA-F]{24}$/)) {
-    throw new CastError('Передан некорректный id фильма');
-  }
   Movie.findById(req.params.movieId)
     .then((movie) => {
       if (!movie) {

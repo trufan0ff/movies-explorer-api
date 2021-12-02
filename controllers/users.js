@@ -47,32 +47,20 @@ module.exports.createUser = (req, res, next) => {
     })
     .catch(next);
 };
-//   return bcrypt.hash(password, 10).then((hash) => {
-//     User.create({
-//       name,
-//       email,
-//       password: hash,
-//     })
-//       .then((user) => res.send({
-//         _id: user._id,
-//         name,
-//         email,
-//       }))
-//       .catch((err) => next(err));
-//   });
-// };
 
 module.exports.updateProfile = (req, res, next) => {
   const newData = {};
-  if (req.body.email === req.user.email) {
-    next(new ConflictErr('Такая почта существует'));
-  }
   if (req.body.name) {
     newData.name = req.body.name;
   }
   if (req.body.email) {
     newData.email = req.body.email;
   }
+  // User.findOne(req.body.email)
+  //   .then((user) => {
+  //     throw new ConflictErr('Пользователь с таким email уже существует');
+  //   })
+  //   .catch(next);
   User.findByIdAndUpdate(req.user, newData, { runValidators: true, new: true })
     .then((user) => res.send({ name: user.name, email: user.email, movies: user.movies }))
     .catch((err) => next(err));
