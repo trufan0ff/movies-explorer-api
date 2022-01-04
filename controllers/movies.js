@@ -25,7 +25,7 @@ module.exports.createMovie = (req, res, next) => {
     nameRU,
     nameEN,
   } = req.body;
-  const owner = addOwnerToMovie(req.body, req.user);
+  const owner = addOwnerToMovie(req.user._id);
 
   Movie.createMovie({
     movieId,
@@ -56,7 +56,7 @@ module.exports.deleteMovie = (req, res, next) => {
   Movie.findById(req.params.movieId)
     .then((movie) => {
       if (!movie) {
-        throw new NotFoundError('Фильм с указанным id не найден');
+        throw new CastError('Переданы некорректные данные');
       }
       if (toString(movie.owner) === toString(req.user._id)) {
         Movie.findByIdAndRemove(movie._id)

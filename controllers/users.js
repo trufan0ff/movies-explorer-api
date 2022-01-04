@@ -56,11 +56,11 @@ module.exports.updateProfile = (req, res, next) => {
   if (req.body.email) {
     newData.email = req.body.email;
   }
-  // User.findOne(req.body.email)
-  //   .then((user) => {
-  //     throw new ConflictErr('Пользователь с таким email уже существует');
-  //   })
-  //   .catch(next);
+  User.findOne(req.body.email)
+    .then(() => {
+      throw new ConflictErr('Пользователь с таким email уже существует');
+    })
+    .catch(next);
   User.findByIdAndUpdate(req.user, newData, { runValidators: true, new: true })
     .then((user) => res.send({ name: user.name, email: user.email, movies: user.movies }))
     .catch((err) => next(err));
